@@ -17,11 +17,12 @@ class Env(object):
         self.action = self.action_space.sample()
         self.reward = 0
         self.last_reward = 0
+
+        self.max_step = 20
+
         self.nb_plot = 0
         self.is_train = True
-
         self.plt = plt
-
         self.plot_row = 1
         self.plot_col = 1
 
@@ -34,10 +35,13 @@ class Env(object):
         y = self.coefs[0]*np.power(x[0], 2) + self.coefs[1] * x[0] + self.coefs[2]
         return y
 
-    def reset(self):
+    def reset(self, status=None):
         # print('\n\n--------------------------------------------------------------------------------')
         # self.coefs = np.random.rand(3)*10
-        self.status = np.random.random(1)*10
+        if status is None:
+            self.status = np.random.random(1)*10
+        else:
+            self.status = np.array([status])
         self.init_status = deepcopy(self.status)
         self.loss = self.foo(self.status)
         self.nb_step = 0
@@ -77,7 +81,7 @@ class Env(object):
         self.last_reward = self.reward
         self.reward = self.loss - tmp # - 0.1
         self.loss = tmp
-        done = np.abs(action[0]) < 1e-4 or self.loss > 1000 or self.nb_step >= 20
+        done = np.abs(action[0]) < 1e-4 or self.loss > 100 or self.nb_step >= self.max_step
         info = {}
         return observation, self.reward, done, info
 
