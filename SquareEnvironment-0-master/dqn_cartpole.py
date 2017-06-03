@@ -57,23 +57,24 @@ dqn.load_weights('dqn_{}_weights.h5f'.format(ENV_NAME))
 # After training is done, we save the final weights.
 dqn.save_weights('dqn_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
 
+
+
+with open('dqn_action.json', 'w') as fw:
+
+    observation = [i / 100 - 3 for i in range(600)]
+    action = [float(actions[dqn.forward(np.array([obs]))]) for obs in observation]
+    json.dump({'observation': observation, 'action': action}, fw)
+
+with open('dqn_qvalue.json', 'w') as fw:
+    state_batch = status.reshape([-1, 1, 1])
+    q_val = dqn.compute_batch_q_values(state_batch)
+    q = {'status': state_batch.tolist(), 'q_value': q_val.tolist()}
+    json.dump(q, fw)
+
+
 env.is_train = False
 env.plot_row = 1
 env.plot_col = 5
-
-# with open('dqn_action.json', 'w') as fw:
-#
-#     observation = [i / 100 - 3 for i in range(600)]
-#     action = [float(actions[dqn.forward(np.array([obs]))]) for obs in observation]
-#     json.dump({'observation': observation, 'action': action}, fw)
-#
-# with open('dqn_qvalue.json', 'w') as fw:
-#     state_batch = status.reshape([-1, 1, 1])
-#     q_val = dqn.compute_batch_q_values(state_batch)
-#     q = {'status': state_batch.tolist(), 'q_value': q_val.tolist()}
-#     json.dump(q, fw)
-
-
 # Finally, evaluate our algorithm for 5 episodes.
 dqn.test(env, nb_episodes=5, visualize=True)
 
