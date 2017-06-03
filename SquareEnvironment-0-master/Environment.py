@@ -7,14 +7,21 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.style.use('ggplot')
 
+interval = 0.05
+status = np.arange(-3, 3, interval)
+actions = np.arange(-6, 6, interval)
+
 class Env(object):
     def __init__(self):
-        self.action_shape = [1, ]
+        # self.action_shape = [1, ]
+        # self.action_space = spaces.Box(-0.1, 0.1, shape=self.action_shape)
+        self.action_space = spaces.Discrete(len(actions))
+
         self.observation_shape = [1, ]
-        self.action_space = spaces.Box(-0.1, 0.1, shape=self.action_shape)
+
         self.observation_space = spaces.Box(-0.1, 0.1, shape=self.observation_shape)
         self._seed = 0
-        self.action = self.action_space.sample()
+        self.action = actions[self.action_space.sample()]
         self.reward = 0
         self.last_reward = 0
 
@@ -74,14 +81,16 @@ class Env(object):
         """
         # print(self.status, action)
         self.nb_step += 1
-        self.status += action
+        # self.status += action
+        self.status += actions[action]
+
         self.action = action
         tmp = self.foo(self.status)
         observation = self.observe(tmp)
         self.last_reward = self.reward
         self.reward = self.loss - tmp # - 0.1
         self.loss = tmp
-        done = np.abs(action[0]) < 1e-4 or self.loss > 100 or self.nb_step >= self.max_step
+        done = np.abs(actions[action]) < 1e-4 or self.loss > 100 or self.nb_step >= self.max_step
         info = {}
         return observation, self.reward, done, info
 
