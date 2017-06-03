@@ -1,5 +1,7 @@
 import numpy as np
+import pandas as pd
 import gym
+import json
 
 from keras.models import Sequential, Model
 from keras.layers import Dense, Activation, Flatten, Input, merge
@@ -8,7 +10,7 @@ from keras.optimizers import Adam
 from rl.agents import DDPGAgent
 from rl.memory import SequentialMemory
 from rl.random import OrnsteinUhlenbeckProcess
-from Environment import Env
+from Environment import Env, status, actions
 
 import matplotlib.pyplot as plt
 
@@ -66,20 +68,34 @@ agent.compile(Adam(lr=.001, clipnorm=1.), metrics=['mae'])
 # Okay, now it's time to learn something! We visualize the training here for show, but this
 # slows down training quite a lot. You can always safely abort the training prematurely using
 # Ctrl + C.
-agent.load_weights('sq_observe_status_gamma99_{}_weights.h5f'.format(ENV_NAME))
+agent.load_weights('ddpg_fixed_weights_{}_weights.h5f'.format(ENV_NAME))
 
 # env.is_train = True
 # agent.fit(env, nb_steps=50000, visualize=False, verbose=1, nb_max_episode_steps=20)
 
 # After training is done, we save the final weights.
-agent.save_weights('sq_observe_status_gamma99_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
+# agent.save_weights('ddpg_fixed_weights_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
 
 # Finally, evaluate our algorithm for 5 episodes.
-
 
 env.is_train = False
 env.plot_row = 1
 env.plot_col = 5
+
+q_values = pd.DataFrame()
+st = status.reshape([-1, 1])
+for action in actions:
+    state1_batch_with_action = [st, np.ones(st.shape).reshape(-1, 1, 1) * action]
+    q_values = pd.concat([q_values, pd.DataFrame(agent.target_critic.predict_on_batch(state1_batch_with_action))], axis=1)
+q_values.to_csv('critic.csv')
+
+
+with open('actor.json', 'w') as fw:
+    observation = status.tolist()
+    action = [float(agent.forward(np.array([obs]))[0]) for obs in observation]
+    json.dump({'observation': observation, 'action': action}, fw)
+
+
 agent.test(env, nb_episodes=5, visualize=True, verbose=1, nb_max_episode_steps=20)
 
 env.plt.ioff()
