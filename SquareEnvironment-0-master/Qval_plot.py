@@ -8,15 +8,14 @@ import json
 matplotlib.style.use('ggplot')
 
 from Qvalue import status, actions
+from Environment import Env
 
-X, Y = np.meshgrid(status, actions)
+# ###Q value
+X, Y = np.meshgrid(actions, status)
+# with open('dqn_qvalue.json', 'r') as fr:
+#     Z = np.array(json.load(fr)['q_value'])
 
-
-with open('dqn_qvalue.json', 'r') as fr:
-    Z = np.array(json.load(fr)['q_value']).transpose()
-
-# a = pd.read_csv('realQ.csv', index_col=0)
-# Z = a.transpose()
+Z = pd.read_csv('dqn_qvalue.csv', index_col=0)
 
 fig = plt.figure(1)
 ax = Axes3D(fig)
@@ -25,5 +24,17 @@ ax.plot_surface(Y, X, Z)
 # fig = plt.figure(2)
 # ax = fig.add_subplot(111)
 # ax.plot(a.iloc[:10, :].transpose())
+
+
+# with open('actor.json', 'r') as fr:
+#     ac = np.array(json.load(fr)['action'])
+#     fig = plt.figure(2)
+#     ax = fig.add_subplot(111)
+#     ax.plot(status, ac)
+#
+#     env = Env()
+#     loss = env.foo(status)
+#     ax.plot(status, loss)
+
 
 plt.show()

@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import gym
 import json
 
@@ -42,7 +43,7 @@ print(model.summary())
 # even the metrics!
 memory = SequentialMemory(limit=50000, window_length=1)
 policy = BoltzmannQPolicy()
-dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=10,
+dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=20,
                target_model_update=1e-2, policy=policy)
 dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 
@@ -52,24 +53,20 @@ dqn.compile(Adam(lr=1e-3), metrics=['mae'])
 env.is_train = True
 
 dqn.load_weights('dqn_{}_weights.h5f'.format(ENV_NAME))
-# dqn.fit(env, nb_steps=50000, visualize=False, verbose=2)
+dqn.fit(env, nb_steps=100000, visualize=False, verbose=2)
 
 # After training is done, we save the final weights.
 dqn.save_weights('dqn_{}_weights.h5f'.format(ENV_NAME), overwrite=True)
 
 
-
 with open('dqn_action.json', 'w') as fw:
-
-    observation = [i / 100 - 3 for i in range(600)]
+    observation = status.tolist()
     action = [float(actions[dqn.forward(np.array([obs]))]) for obs in observation]
     json.dump({'observation': observation, 'action': action}, fw)
 
-with open('dqn_qvalue.json', 'w') as fw:
-    state_batch = status.reshape([-1, 1, 1])
-    q_val = dqn.compute_batch_q_values(state_batch)
-    q = {'status': state_batch.tolist(), 'q_value': q_val.tolist()}
-    json.dump(q, fw)
+state_batch = status.reshape([-1, 1, 1])
+q_val = pd.DataFrame(dqn.compute_batch_q_values(state_batch))
+q_val.to_csv('dqn_qvalue.csv')
 
 
 env.is_train = False
